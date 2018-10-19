@@ -1,0 +1,13 @@
+1. Create sqlite.eg repository
+
+   a. mkdir ~/sqlite.eg; cd ~/sqlite.eg
+   b. git init
+
+   c. Create file(s), eg m
+   d. git add m
+   e. git commit -m "first commit"
+
+   f. curl -u <your-user-name> https://api.github.com/user/repos -d '{"name":"sqlite.eg"}'
+   g. git remote add origin https://github.com/<your-user-name>/sqlite.eg
+
+   h. git push -u origin master
