@@ -48,14 +48,32 @@ EOQ
 
 qq()
 {
-	month=$1
-	if [[ $# -eq 0 ]]; then
-		month=$(date +%Y-%m)
+	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
+	then
+		echo "Usage : m qq " 
+		echo "Usage : m qq <date>" 
+		echo "Usage : m qq <field> <fieldVal>" 
+		return 1
 	fi
 
+	if [[ $# -eq 0 ]]; then
+		field=date
+		fieldVal=$(date +%Y-%m)
+	fi
+
+	if [[ $# -eq 1 ]]; then
+		field=date
+		fieldVal=$1
+	fi
+
+	if [[ $# -eq 2 ]]; then
+		field=$1
+		fieldVal=$2
+	fi
+
+	echo -e "For date : ${fieldVal}   \c"
 	${sql} -bail ${db} << EOQ
-.print For date : ${month}
-select sum(amount) from ${heTbl} where date like '%${month}%'
+select sum(amount) from ${heTbl} where ${field} like '%${fieldVal}%'
 EOQ
 
 	return $?;
@@ -64,13 +82,34 @@ EOQ
 i()
 {
 	if [[ $# -ne 4 ]]; then
-		echo "Usage : i <date> <amount> <info> <category>"
-		echo "numArgs : $#"
+		echo "Usage : i <date> <amount> <category> <info>" >&2
+		echo "numArgs: $#" >&2
 		return 1;
 	fi
-	d=$1; a=$2; i=$3; c=$4
+	d=$1; a=$2; c=$3; i=$4
 
-	sqlCmd="insert into ${heTbl} (date, amount, info, category) values ('${d}', ${a}, '${i}', '${c}')"
+	sqlCmd="insert into ${heTbl} (date, amount, category, info) values ('${d}', ${a}, '${c}', '${i}')"
+	${sql} ${db} "${sqlCmd}"
+	r=$?
+	if [[ $r -ne 0 ]]; then
+		echo "ERROR: m i : $sqlCmd" >&2
+	else
+		echo "m i : $sqlCmd"
+	fi
+
+	return $?
+}
+
+d()
+{
+	if [[ $# -ne 1 ]]; then
+		echo "Usage : d <rowId>" >&2
+		echo "numArgs: $#"
+		return 1;
+	fi
+	rowId=$1
+
+	sqlCmd="delete from  ${heTbl} where rowid = $rowId"
 	${sql} ${db} "${sqlCmd}"
 
 	return $?
