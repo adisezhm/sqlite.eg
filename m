@@ -29,17 +29,35 @@ init()
 
 q()
 {
-	month=$1
+	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
+	then
+		echo "Usage : m q "
+		echo "Usage : m q <date>"
+		echo "Usage : m q <field> <fieldVal>"
+		return 1
+	fi
+
 	if [[ $# -eq 0 ]]; then
-		month=$(date +%Y-%m)
+		field=date
+		fieldVal=$(date +%Y-%m)
+	fi
+
+	if [[ $# -eq 1 ]]; then
+		field=date
+		fieldVal=$1
+	fi
+
+	if [[ $# -eq 2 ]]; then
+		field=$1
+		fieldVal=$2
 	fi
 
 	${sql} -bail ${db} << EOQ
 .mode column
 .headers on
 .width 0 0 0 0 32
-.print For date : ${month}
-select rowid, date, amount, category, info from ${heTbl} where date like '%${month}%';
+.print For ${field} : ${fieldVal}
+select rowid, date, amount, category, info from ${heTbl} where ${field} like '%${fieldVal}%';
 .quit
 EOQ
 
@@ -71,12 +89,22 @@ qq()
 		fieldVal=$2
 	fi
 
-	echo -e "For date : ${fieldVal}   \c"
+	echo -e "For ${field} : ${fieldVal}   \c"
 	${sql} -bail ${db} << EOQ
 select sum(amount) from ${heTbl} where ${field} like '%${fieldVal}%'
 EOQ
 
 	return $?;
+}
+
+qqq()
+{
+	q "$@"
+	if [[ $? -eq 0 ]]; then
+		qq "$@"
+	fi
+
+	return $?
 }
 
 i()
@@ -123,7 +151,7 @@ c()
 
 init # init globals
 
-if [[ "$1" = "c" || "$1" = "d" || "$1" = "i" || "$1" = "q" || "$1" = "qq" ]]; then
+if [[ "$1" = "c" || "$1" = "d" || "$1" = "i" || "$1" = "q" || "$1" = "qq"  || "$1" = "qqq" ]]; then
 	cmd=$1
 	shift; ${cmd} "$@"; exit $?
 fi
