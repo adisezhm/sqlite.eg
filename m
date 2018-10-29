@@ -143,15 +143,61 @@ d()
 	return $?
 }
 
+u()
+{
+	if [[ $# -ne 3 ]]; then
+		echo "Usage : u <rowId> <field> <fieldVal>" >&2
+		return 1;
+	fi
+	rowId=$1
+	field=$2
+	fieldVal=$3
+
+	sqlCmd="update ${heTbl} set ${field} = '${fieldVal}' where rowid = ${rowId}"
+	echo "m u : ${sqlCmd}"
+	${sql} ${db} "${sqlCmd}"
+
+	return $?
+}
+
 c()
 {
 	${sql} ${db} "CREATE TABLE ${heTbl} ( date date, amount float, info text, category text, misc text )"
 	return $?
 }
 
+
+iBatch()
+{
+	r=0
+	while read -r date amount cate info
+	do
+		if [[ -z $date ]]
+		then
+			continue
+		fi
+		k=$(echo $info | sed -e 's/^"//' -e 's/"$//')
+		m i $date $amount $cate "$k"
+		let r=$r+$?
+	done
+
+	return $r
+}
+
+uniqueCategory()
+{
+	m q | grep -v -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | nl
+	return $?
+}
+
 init # init globals
 
-if [[ "$1" = "c" || "$1" = "d" || "$1" = "i" || "$1" = "q" || "$1" = "qq"  || "$1" = "qqq" ]]; then
+if [[ "$1" = "c" || "$1" = "d" || "$1" = "i" || "$1" = "q" || "$1" = "qq"  || "$1" = "qqq" || "$1" = "u" ]]; then
+	cmd=$1
+	shift; ${cmd} "$@"; exit $?
+fi
+
+if [[ "$1" = "iBatch" || "$1" = "uniqueCategory" ]]; then
 	cmd=$1
 	shift; ${cmd} "$@"; exit $?
 fi
