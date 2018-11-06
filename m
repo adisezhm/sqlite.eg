@@ -187,9 +187,25 @@ uniqueCategory()
 	return $?
 }
 
+s()
+{
+	total=$(m qq | grep -v WHERE | awk '{ print $1 }' )
+
+	printf "Total : %.2f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
+	for i in food grocery maint medical others stocks transport
+	do
+		m qq category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
+	done
+
+	return $?
+}
+
 init # init globals
 
-if [[ "$1" = "c" || "$1" = "d" || "$1" = "i" || "$1" = "q" || "$1" = "qq"  || "$1" = "qqq" || "$1" = "u" ]]; then
+if [[ "$1" = "c"   || "$1" = "d"   || "$1" = "i"   || \
+      "$1" = "q"   || "$1" = "qq"  || "$1" = "qqq" || \
+      "$1" = "u"   || "$1" = "s"                      \
+   ]]; then
 	cmd=$1
 	shift; ${cmd} "$@"; exit $?
 fi
