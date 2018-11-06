@@ -204,8 +204,10 @@ s()
 		return 1
 	fi
 
-	total=$(m qq $1 | grep -v WHERE | awk '{ print $1 }' )
+	qqOutput=$(m qq $1); qqOutput="${qqOutput}"
+	echo "$qqOutput" | grep WHERE
 
+	total=$(echo "$qqOutput" | tail -n 1 | awk '{ print $1 }' )
 	printf "Total : %.2f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
 	cats=$(m uniqueCategory nolinenum)
 	for i in ${cats}
