@@ -183,16 +183,27 @@ iBatch()
 
 uniqueCategory()
 {
-	m q | grep -v -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | nl
+	LN="nl"
+	if [[ "$1" = "nolinenum" ]]; then LN=" cat"; fi
+
+	m q | grep -v -e WHERE -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | ${LN}
 	return $?
 }
 
 s()
 {
-	total=$(m qq | grep -v WHERE | awk '{ print $1 }' )
+	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
+	then
+		echo "Usage : m s "
+		echo "Usage : m s <date>"
+		return 1
+	fi
+
+	total=$(m qq "$@" | grep -v WHERE | awk '{ print $1 }' )
 
 	printf "Total : %.2f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
-	for i in food grocery maint medical others stocks transport
+	cats=$(m uniqueCategory nolinenum)
+	for i in ${cats}
 	do
 		m qq category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
 	done
