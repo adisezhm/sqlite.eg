@@ -27,6 +27,31 @@ init()
 	return 0;
 }
 
+getW()
+{
+	if [[ $# -eq 0 ]]; then
+		f1=date; f1Val=$(date +%Y-%m)
+	fi
+
+	if [[ $# -eq 1 ]]; then
+		f1=date; f1Val=$1
+	fi
+
+	if [[ $# -eq 2 ]]; then
+		f1=date; f1Val=$(date +%Y-%m)
+		f2=$1;   f2Val=$2
+	fi
+
+	w1="${f1} like '%${f1Val}%'"
+	w2=" and ${f2} like '%${f2Val}%'"
+	if [[ ! -z ${f1} ]]; then w=${w1}; fi
+	if [[ ! -z ${f2} ]]; then w="${w} ${w2}"; fi
+
+	echo "WHERE : ${w}"
+
+	return 0
+}
+
 q()
 {
 	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
@@ -37,27 +62,13 @@ q()
 		return 1
 	fi
 
-	if [[ $# -eq 0 ]]; then
-		field=date
-		fieldVal=$(date +%Y-%m)
-	fi
-
-	if [[ $# -eq 1 ]]; then
-		field=date
-		fieldVal=$1
-	fi
-
-	if [[ $# -eq 2 ]]; then
-		field=$1
-		fieldVal=$2
-	fi
+	getW "$@"
 
 	${sql} -bail ${db} << EOQ
 .mode column
 .headers on
 .width 0 0 0 0 32
-.print For ${field} : ${fieldVal}
-select rowid, date, amount, category, info from ${heTbl} where ${field} like '%${fieldVal}%';
+select rowid, date, amount, category, info from ${heTbl} where ${w} ;
 .quit
 EOQ
 
@@ -68,30 +79,16 @@ qq()
 {
 	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
 	then
-		echo "Usage : m qq " 
-		echo "Usage : m qq <date>" 
-		echo "Usage : m qq <field> <fieldVal>" 
+		echo "Usage : m qq "
+		echo "Usage : m qq <date>"
+		echo "Usage : m qq <field> <fieldVal>"
 		return 1
 	fi
 
-	if [[ $# -eq 0 ]]; then
-		field=date
-		fieldVal=$(date +%Y-%m)
-	fi
+	getW "$@"
 
-	if [[ $# -eq 1 ]]; then
-		field=date
-		fieldVal=$1
-	fi
-
-	if [[ $# -eq 2 ]]; then
-		field=$1
-		fieldVal=$2
-	fi
-
-	echo -e "For ${field} : ${fieldVal}   \c"
 	${sql} -bail ${db} << EOQ
-select sum(amount) from ${heTbl} where ${field} like '%${fieldVal}%'
+select sum(amount) from ${heTbl} where ${w}
 EOQ
 
 	return $?;
