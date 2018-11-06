@@ -42,6 +42,11 @@ getW()
 		f2=$1;   f2Val=$2
 	fi
 
+	if [[ $# -eq 3 ]]; then
+		f1=date; f1Val=$1
+		f2=$2;   f2Val=$3
+	fi
+
 	w1="${f1} like '%${f1Val}%'"
 	w2=" and ${f2} like '%${f2Val}%'"
 	if [[ ! -z ${f1} ]]; then w=${w1}; fi
@@ -54,11 +59,11 @@ getW()
 
 q()
 {
-	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
+	if [[ $# -lt 0 || $# -gt 3 ]]
 	then
 		echo "Usage : m q "
 		echo "Usage : m q <date>"
-		echo "Usage : m q <field> <fieldVal>"
+		echo "Usage : m q [date] <field> <fieldVal>"
 		return 1
 	fi
 
@@ -77,11 +82,11 @@ EOQ
 
 qq()
 {
-	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
+	if [[ $# -lt 0 || $# -gt 3 ]]
 	then
 		echo "Usage : m qq "
 		echo "Usage : m qq <date>"
-		echo "Usage : m qq <field> <fieldVal>"
+		echo "Usage : m qq [date] <field> <fieldVal>"
 		return 1
 	fi
 
@@ -199,13 +204,13 @@ s()
 		return 1
 	fi
 
-	total=$(m qq "$@" | grep -v WHERE | awk '{ print $1 }' )
+	total=$(m qq $1 | grep -v WHERE | awk '{ print $1 }' )
 
 	printf "Total : %.2f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
 	cats=$(m uniqueCategory nolinenum)
 	for i in ${cats}
 	do
-		m qq category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
+		m qq $1 category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
 	done
 
 	return $?
