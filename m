@@ -27,6 +27,8 @@ init()
 	return 0;
 }
 
+#  get where condition
+#
 getW()
 {
 	if [[ $# -eq 0 ]]; then
@@ -197,22 +199,28 @@ uniqueCategory()
 
 s()
 {
-	if [[ $# -ne 0 && $# -ne 1 && $# -ne 2 ]]
+	if [[ $# -ne 0 && $# -ne 1 ]]
 	then
 		echo "Usage : m s "
 		echo "Usage : m s <date>"
 		return 1
 	fi
+	d=$1
 
-	qqOutput=$(m qq $1); qqOutput="${qqOutput}"
+	#  get and print the where condition
+	qqOutput=$(m qq $d); qqOutput="${qqOutput}"
 	echo "$qqOutput" | grep WHERE
 
+	#  get the total, for given <date> ie $d
+	#  print total, and the header
 	total=$(echo "$qqOutput" | tail -n 1 | awk '{ print $1 }' )
-	printf "Total : %.2f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
+	printf "Total : %.0f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
+
+	#  print summary for each category of expense, for given <date> $d
 	cats=$(m uniqueCategory nolinenum)
 	for i in ${cats}
 	do
-		m qq $1 category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
+		m qq $d category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
 	done
 
 	return $?
