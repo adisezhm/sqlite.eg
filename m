@@ -190,10 +190,25 @@ iBatch()
 
 uniqueCategory()
 {
-	LN="nl"
-	if [[ "$1" = "nolinenum" ]]; then LN=" cat"; fi
+	if [[ $# -gt 2 ]]
+	then
+		echo "Usage : m uniqueCategory "
+		echo "Usage : m uniqueCategory <nolinenum | linenum>"
+		echo "Usage : m uniqueCategory <nolinenum | linenum> <date>"
+		return 1
+	fi
 
-	m q | grep -v -e WHERE -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | ${LN}
+	lineNumOrNot=$1
+	if [[ "$lineNumOrNot" = "nolinenum" ]]
+	then
+		LN=" cat";
+	else
+		LN="nl"
+	fi
+
+	d=$2
+
+	m q ${d} | grep -v -e WHERE -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | ${LN}
 	return $?
 }
 
@@ -217,7 +232,7 @@ s()
 	printf "Total : %.0f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
 
 	#  print summary for each category of expense, for given <date> $d
-	cats=$(m uniqueCategory nolinenum)
+	cats=$(m uniqueCategory nolinenum ${d})
 	for i in ${cats}
 	do
 		m qq $d category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
