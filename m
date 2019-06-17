@@ -74,7 +74,7 @@ q()
 	${sql} -bail ${db} << EOQ
 .mode column
 .headers on
-.width 0 0 0 0 32
+.width 0 0 0 20 32
 select rowid, date, amount, category, info from ${heTbl} where ${w} ;
 .quit
 EOQ
