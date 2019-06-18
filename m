@@ -188,39 +188,48 @@ iBatch()
 	return $r
 }
 
-uniqueCategory()
+uc()
 {
-	if [[ $# -gt 2 ]]
+	if [[ $# -gt 3 || $1 = "-h" || $1 = "--help" ]]
 	then
-		echo "Usage : m uniqueCategory "
-		echo "Usage : m uniqueCategory <nolinenum | linenum>"
-		echo "Usage : m uniqueCategory <nolinenum | linenum> <date>"
+		echo "Usage : m uc "
+		echo "Usage : m uc <nolinenum | linenum>"
+		echo "Usage : m uc <nolinenum | linenum> <date> [hl | ll]"
 		return 1
 	fi
 
+	# args
 	lineNumOrNot=$1
-	if [[ "$lineNumOrNot" = "nolinenum" ]]
-	then
+	if [[ "$lineNumOrNot" = "nolinenum" ]]; then
 		LN=" cat";
 	else
 		LN="nl"
 	fi
-
 	d=$2
+	type=$3
 
-	m q ${d} | grep -v -e WHERE -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | ${LN}
+	# logic
+	if [[ "$type" = "hl" ]]; then
+		TYPE=" sed -e 's/\\/.*$//' ";
+		m q ${d} | grep -v -e WHERE -e rowid -e "For" -e '----------' | awk '{ print $4}' | sed -e 's/\/.*$//' | sort -u | ${LN}
+	else
+		TYPE="cat"
+		m q ${d} | grep -v -e WHERE -e rowid -e "For" -e '----------' | awk '{ print $4}' | sort -u | ${LN}
+	fi
+
 	return $?
 }
 
-s()
+summary_base()
 {
-	if [[ $# -ne 0 && $# -ne 1 || $1 = "-h" || $1 = "--help" ]]
+	if [[ $# -ne 2 || $1 = "-h" || $1 = "--help" ]]
 	then
-		echo "Usage : m s "
-		echo "Usage : m s <date>"
+		echo "Usage : summary_base "
+		echo "Usage : summary_base <date> [ hl | ll ]"
 		return 1
 	fi
 	d=$1
+	type=$2
 
 	#  get and print the where condition
 	qqOutput=$(m qq $d); qqOutput="${qqOutput}"
@@ -232,7 +241,8 @@ s()
 	printf "Total : %.0f\n%15s %8s %8s\n" ${total} "category" "amount" "percent"
 
 	#  print summary for each category of expense, for given <date> $d
-	cats=$(m uniqueCategory nolinenum ${d})
+	cats=$(m uc nolinenum ${d} ${type})
+
 	for i in ${cats}
 	do
 		m qq $d category $i | grep -v WHERE | awk -v cat=${i} -v total=${total} '{ printf "%15s %8d %8.2f\n", cat, $1, ($1/total)*100 }'
@@ -241,17 +251,55 @@ s()
 	return $?
 }
 
+s()
+{
+	if [[ $# -ne 0 && $# -gt 1 || $1 = "-h" || $1 = "--help" ]]
+	then
+		echo "Usage : m s "
+		echo "Usage : m s <date>"
+		return 1
+	fi
+
+	#  args
+	if [[ $# -eq 0 ]]; then
+		d=$(date +%Y-%m)
+	else d=$1; fi
+
+	summary_base $d  "hl"
+
+	return $?
+}
+
+sd()
+{
+	if [[ $# -ne 0 && $# -gt 1 || $1 = "-h" || $1 = "--help" ]]
+	then
+		echo "Usage : m sd "
+		echo "Usage : m sd <date>"
+		return 1
+	fi
+
+	#  args
+	if [[ $# -eq 0 ]]; then
+		d=$(date +%Y-%m)
+	else d=$1; fi
+
+	summary_base $d  "ll"
+
+	return $?
+}
+
 init # init globals
 
 if [[ "$1" = "c"   || "$1" = "d"   || "$1" = "i"   || \
       "$1" = "q"   || "$1" = "qq"  || "$1" = "qqq" || \
-      "$1" = "u"   || "$1" = "s"                      \
+      "$1" = "u"   || "$1" = "s"   || "$1" = "sd"     \
    ]]; then
 	cmd=$1
 	shift; ${cmd} "$@"; exit $?
 fi
 
-if [[ "$1" = "iBatch" || "$1" = "uniqueCategory" ]]; then
+if [[ "$1" = "iBatch" || "$1" = "uc" ]]; then
 	cmd=$1
 	shift; ${cmd} "$@"; exit $?
 fi
