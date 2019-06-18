@@ -61,7 +61,7 @@ getW()
 
 q()
 {
-	if [[ $# -lt 0 || $# -gt 3 ]]
+	if [[ $# -lt 0 || $# -gt 3 || $1 = "-h" || $1 = "--help" ]]
 	then
 		echo "Usage : m q "
 		echo "Usage : m q <date>"
@@ -84,7 +84,7 @@ EOQ
 
 qq()
 {
-	if [[ $# -lt 0 || $# -gt 3 ]]
+	if [[ $# -lt 0 || $# -gt 3 || $1 = "-h" || $1 = "--help" ]]
 	then
 		echo "Usage : m qq "
 		echo "Usage : m qq <date>"
@@ -214,7 +214,7 @@ uniqueCategory()
 
 s()
 {
-	if [[ $# -ne 0 && $# -ne 1 ]]
+	if [[ $# -ne 0 && $# -ne 1 || $1 = "-h" || $1 = "--help" ]]
 	then
 		echo "Usage : m s "
 		echo "Usage : m s <date>"
