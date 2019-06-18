@@ -18,6 +18,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+#
+#  NOTES:
+#  - the internal functions should not have default parameters
+#  - the user facing interface can have default parameters; and
+#    they should be resolved before calling internal functions
+#
 
 init()
 {
@@ -224,7 +230,6 @@ summary_base()
 {
 	if [[ $# -ne 2 || $1 = "-h" || $1 = "--help" ]]
 	then
-		echo "Usage : summary_base "
 		echo "Usage : summary_base <date> [ hl | ll ]"
 		return 1
 	fi
